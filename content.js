@@ -1,12 +1,825 @@
-const player = document.getElementById('movie_player');
-const video = document.querySelector('video');
+(function() {
+    function waitForPlayerControls(callback) {
+        const interval = setInterval(() => {
+            const controls = document.querySelector('.ytp-right-controls');
+            if (controls) {
+                clearInterval(interval);
+                callback(controls);
+            }
+        }, 500);
+    }
 
-setInterval(() => {
-    if (player && player.getCurrentTime) {
-        console.log('YouTube API time:', player.getCurrentTime());
+    function injectDanceButton(controls) {
+        if (document.getElementById('yt-dance-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'yt-dance-btn';
+        btn.className = 'ytp-button';
+        btn.title = 'Dance Controls';
+        btn.innerHTML = '<svg height="100%" viewBox="0 9.47 70.04 36.4" width="100%" style="fill:white;"><path d="M23.41 9.47L28.15 9.47L28.15 30.15Q28.15 35.55 26.93 38.72Q25.71 41.89 22.52 43.88Q19.34 45.87 14.16 45.87Q9.13 45.87 5.93 44.14Q2.73 42.41 1.37 39.12Q0 35.84 0 30.15L0 9.47L4.74 9.47L4.74 30.13Q4.74 34.79 5.60 37.00Q6.47 39.21 8.58 40.41Q10.69 41.60 13.75 41.60Q18.97 41.60 21.19 39.23Q23.41 36.87 23.41 30.13L23.41 9.47ZM35.89 45.26L35.89 9.47L43.02 9.47L51.49 34.81Q52.66 38.35 53.20 40.11Q53.81 38.16 55.10 34.38L63.67 9.47L70.04 9.47L70.04 45.26L65.48 45.26L65.48 15.31L55.08 45.26L50.81 45.26L40.45 14.79L40.45 45.26L35.89 45.26Z"/></svg>';
+        btn.style.marginLeft = '8px';
+        controls.insertBefore(btn, controls.firstChild);
+
+        const card = document.createElement('div');
+        card.id = 'yt-dance-card';
+        card.style.display = 'none';
+        const speedLabels = [
+            '0.1x','0.2x','0.3x','0.4x','0.5x','0.6x','0.7x','0.8x','0.9x','1.0x'
+        ];
+        card.innerHTML = `
+          <div class="yt-dance-card-inner">
+            <div class="yt-dance-card-title-row">
+              <div class="yt-dance-card-title" id="yt-dance-card-title">Dance Controls</div>
+              <button class="close-btn" title="Close">×</button>
+            </div>
+            <div class="mirror-toggle-row">
+              <div class="mirror-toggle-inline">
+                <span class="mirror-label">Mirror</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="yt-dance-mirrorToggle">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="yt-dance-row">
+              <div class="speed-slider-container">
+                <div class="speed-value" id="yt-dance-speedValue">1.0x</div>
+                <div class="slider-tick-container">
+                  <input type="range" class="speed-slider" id="yt-dance-speedSlider" min="0.1" max="1" step="0.05" value="1">
+                  <div class="slider-ticks"></div>
+                </div>
+                <div class="speed-labels" id="yt-dance-speedLabels"></div>
+              </div>
+            </div>
+            <div class="countdown-section">
+              <div class="countdown-toggle-row">
+                <div class="countdown-toggle-inline">
+                  <span class="countdown-label">Countdown</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="yt-dance-countdownToggle">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="countdown-input-group">
+                  <div class="countdown-input-wrapper">
+                    <input type="number" id="countdown-seconds" placeholder="5" min="1" max="60" disabled>
+                    <span class="countdown-input-suffix">seconds</span>
+                  </div>
+                  <button type="button" id="set-timer-btn" disabled>Set Timer</button>
+                </div>
+              </div>
+            </div>
+            <div class="segments-section">
+              <div class="segments-title">Segments</div>
+              <div class="segments-list" id="segments-list"></div>
+              <button class="add-segment-btn" id="add-segment-btn">Add Section</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(card);
+
+        const segmentsConfigCard = document.createElement('div');
+        segmentsConfigCard.id = 'segments-config-card';
+        segmentsConfigCard.style.display = 'none';
+        segmentsConfigCard.innerHTML = `
+          <div class="segments-config-inner">
+            <div class="segments-config-title-row">
+              <div class="segments-config-title">Configure Section</div>
+              <button class="close-btn" title="Close">×</button>
+            </div>
+            <div class="config-form">
+              <div class="form-group">
+                <label for="segment-name">Section Name</label>
+                <input type="text" id="segment-name" maxlength="50" placeholder="Enter section name">
+              </div>
+              <div class="form-group">
+                <label for="start-time">Start Time</label>
+                <div class="time-input-group">
+                  <input type="text" id="start-time" placeholder="0:00" pattern="[0-9]*:[0-5][0-9]">
+                  <button type="button" id="current-start-btn">Current Time</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="end-time">End Time</label>
+                <div class="time-input-group">
+                  <input type="text" id="end-time" placeholder="0:00" pattern="[0-9]*:[0-5][0-9]">
+                  <button type="button" id="current-end-btn">Current Time</button>
+                </div>
+              </div>
+              <div class="config-buttons">
+                <button type="button" id="save-segment-btn">Save</button>
+                <button type="button" id="cancel-segment-btn">Cancel</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(segmentsConfigCard);
+
+        const countdownDisplay = document.createElement('div');
+        countdownDisplay.id = 'countdown-display';
+        countdownDisplay.style.display = 'none';
+        countdownDisplay.innerHTML = '<div class="countdown-number">5</div>';
+        document.body.appendChild(countdownDisplay);
+
+        const speedLabelsContainer = card.querySelector('#yt-dance-speedLabels');
+        speedLabels.forEach(label => {
+            const span = document.createElement('span');
+            span.textContent = label;
+            speedLabelsContainer.appendChild(span);
+        });
+
+        let segments = [];
+        let currentVideoId = null;
+        let loopingSegmentIndex = null;
+        let countdownEnabled = false;
+        let countdownSeconds = 5;
+        let countdownInterval = null;
+        let countdownAudio = null;
+        let countdownJustFinished = false;
+        let isManualSeek = false;
+        let loopJustEnabled = false;
+        let isLoopRestarting = false;
+        
+        function isSegmentLooping(index) {
+            return loopingSegmentIndex === index;
+        }
+        
+        function setLoopState(index, enabled) {
+            if (enabled) {
+                loopingSegmentIndex = index;
+                loopJustEnabled = true;
+                isLoopRestarting = false;
+                setTimeout(() => {
+                    loopJustEnabled = false;
+                }, 500);
+            } else {
+                loopingSegmentIndex = null;
+                loopJustEnabled = false;
+                isLoopRestarting = false;
+            }
+            updateLoopButtonStates();
+        }
+        
+        function updateLoopButtonStates() {
+            const loopButtons = document.querySelectorAll('.segment-loop-btn');
+            loopButtons.forEach((btn, btnIndex) => {
+                const isLooping = isSegmentLooping(btnIndex);
+                btn.classList.toggle('looping', isLooping);
+            });
+        }
+        
+        function checkAndDisableLoopIfOutsideSegment() {
+            if (loopingSegmentIndex !== null && !loopJustEnabled && !isLoopRestarting) {
+                const segment = segments[loopingSegmentIndex];
+                const video = document.querySelector('video');
+                if (video) {
+                    const currentTime = video.currentTime;
+                    const tolerance = 0.5;
+                    
+                    if (currentTime < (segment.start - tolerance) || currentTime >= segment.end) {
+                        setLoopState(loopingSegmentIndex, false);
+                    }
+                }
+            }
+        }
+
+        function getVideoId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('v');
+        }
+
+        function isVideoPage() {
+            return getVideoId() !== null;
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function formatTimeDisplay(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function parseTime(timeStr) {
+            const parts = timeStr.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        function getCurrentVideoTime() {
+            const video = document.querySelector('video');
+            return video ? video.currentTime : 0;
+        }
+
+        function loadSegments() {
+            const videoId = getVideoId();
+            if (videoId !== currentVideoId) {
+                currentVideoId = videoId;
+                chrome.storage.local.get(['segments_' + videoId], (result) => {
+                    segments = result['segments_' + videoId] || [];
+                    renderSegments();
+                });
+            }
+        }
+
+        function handleVideoChange() {
+            const newVideoId = getVideoId();
+            if (newVideoId !== currentVideoId) {
+                closePopup();
+                loadSegments();
+                
+                countdownEnabled = false;
+                countdownJustFinished = false;
+                stopCountdown();
+                
+                const countdownToggle = card.querySelector('#yt-dance-countdownToggle');
+                if (countdownToggle) {
+                    countdownToggle.checked = false;
+                }
+                
+                setTimeout(() => {
+                    setupVideoTimeListener();
+                }, 1000);
+            }
+        }
+
+        function closePopup() {
+            card.style.display = 'none';
+            segmentsConfigCard.style.display = 'none';
+        }
+
+        function checkAndClosePopup() {
+            if (!isVideoPage()) {
+                closePopup();
+            } else {
+                const newVideoId = getVideoId();
+                if (newVideoId !== currentVideoId && card.style.display === 'block') {
+                    closePopup();
+                }
+            }
+        }
+
+        function saveSegments() {
+            if (currentVideoId) {
+                chrome.storage.local.set({ ['segments_' + currentVideoId]: segments });
+            }
+        }
+
+        function renderSegments() {
+            const segmentsList = card.querySelector('#segments-list');
+            const addBtn = card.querySelector('#add-segment-btn');
+            
+            segmentsList.innerHTML = '';
+            
+            if (segments.length === 0) {
+                addBtn.style.display = 'block';
+            } else {
+                segments.forEach((segment, index) => {
+                    const segmentEl = document.createElement('div');
+                    segmentEl.className = 'segment-item';
+                    const loopIcon = '<svg height="20px" viewBox="0 0 545.487 545.487" width="20px" style="fill:white;"><path d="M545.487,269.909v7.995c0,65.811-53.546,119.338-119.344,119.338H331.24c0,0,22.023-14.931,17.235-46.589h77.668c40.122,0,72.761-32.633,72.761-72.755v-7.995c0-40.125-32.645-72.761-72.761-72.761h-106.85l0,0h-28.176l16.443,41.632c0.579,1.469,0.106,3.142-1.152,4.091c-1.266,0.957-3.003,0.951-4.256-0.018l-86.123-66.198c-0.872-0.665-1.374-1.696-1.374-2.784c0-1.09,0.502-2.125,1.374-2.79l86.123-66.204c0.632-0.496,1.389-0.733,2.146-0.733c0.745,0,1.489,0.231,2.116,0.707c1.259,0.952,1.731,2.627,1.146,4.093l-16.432,41.636h28.17v-0.006h106.844C491.941,150.562,545.487,204.104,545.487,269.909z M243.34,302.628c-1.253-0.964-2.991-0.97-4.256-0.012c-1.259,0.951-1.731,2.63-1.149,4.09l16.438,41.63h-28.174l0,0H119.344c-40.122,0-72.758-32.646-72.758-72.762v-7.997c0-40.117,32.642-72.759,72.758-72.759h77.667c-4.788-31.649,17.233-46.586,17.233-46.586h-94.9C53.543,148.233,0,201.767,0,267.578v7.997c0,65.811,53.543,119.345,119.344,119.345h106.843v-0.007h28.173l-16.438,41.63c-0.582,1.472-0.109,3.15,1.149,4.096c0.63,0.479,1.375,0.71,2.119,0.71c0.75,0,1.513-0.236,2.143-0.733l86.12-66.2c0.875-0.668,1.377-1.696,1.377-2.79c0-1.1-0.502-2.122-1.377-2.79L243.34,302.628z"/></svg>';
+                    segmentEl.innerHTML = `
+                        <div class="segment-info">
+                            <div class="segment-name">${segment.name}</div>
+                            <div class="segment-time">${formatTimeDisplay(segment.start)} - ${formatTimeDisplay(segment.end)}</div>
+                        </div>
+                        <div class="segment-actions">
+                            <button class="segment-play-btn" data-index="${index}">▶</button>
+                            <button class="segment-loop-btn" data-index="${index}">${loopIcon}</button>
+                            <button class="segment-delete-btn" data-index="${index}">×</button>
+                        </div>
+                    `;
+                    segmentsList.appendChild(segmentEl);
+                });
+                addBtn.style.display = 'block';
+            }
+            
+            updateLoopButtonStates();
+        }
+
+        function showConfigCard() {
+            card.style.display = 'none';
+            segmentsConfigCard.style.display = 'block';
+            positionConfigCard();
+        }
+
+        function hideConfigCard() {
+            segmentsConfigCard.style.display = 'none';
+            card.style.display = 'block';
+            positionCard();
+        }
+
+        function positionConfigCard() {
+            const player = document.querySelector('.html5-video-player');
+            if (!player) return;
+            const rect = player.getBoundingClientRect();
+            segmentsConfigCard.style.position = 'fixed';
+            segmentsConfigCard.style.left = (rect.right - 340) + 'px';
+            segmentsConfigCard.style.top = (rect.top + 50) + 'px';
+            segmentsConfigCard.style.zIndex = 10000;
+        }
+
+        function startCountdown() {
+            if (!countdownEnabled || countdownJustFinished) return;
+            
+            clearInterval(countdownInterval);
+            let currentCount = countdownSeconds;
+            const video = document.querySelector('video');
+            
+            if (video) {
+                video.pause();
+            }
+            
+            countdownDisplay.style.display = 'block';
+            countdownDisplay.querySelector('.countdown-number').textContent = currentCount;
+            
+            if (countdownAudio) {
+                countdownAudio.play().catch(e => console.log('Audio play failed:', e));
+            }
+            
+            countdownInterval = setInterval(() => {
+                currentCount--;
+                countdownDisplay.querySelector('.countdown-number').textContent = currentCount;
+                
+                if (currentCount > 0 && countdownAudio) {
+                    countdownAudio.play().catch(e => console.log('Audio play failed:', e));
+                }
+                
+                if (currentCount <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownDisplay.style.display = 'none';
+                    countdownJustFinished = true;
+                    if (video) {
+                        video.play();
+                    }
+                    setTimeout(() => {
+                        countdownJustFinished = false;
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        function stopCountdown() {
+            clearInterval(countdownInterval);
+            countdownDisplay.style.display = 'none';
+            const video = document.querySelector('video');
+            if (video) {
+                video.play();
+            }
+        }
+
+        function positionCard() {
+            const player = document.querySelector('.html5-video-player');
+            if (!player) return;
+            const rect = player.getBoundingClientRect();
+            card.style.position = 'fixed';
+            card.style.left = (rect.right - 340) + 'px';
+            card.style.top = (rect.top + 50) + 'px';
+            card.style.zIndex = 10000;
+        }
+        positionCard();
+        window.addEventListener('resize', positionCard);
+
+        btn.addEventListener('click', () => {
+            if (!isVideoPage()) {
+                return;
+            }
+            card.style.display = card.style.display === 'none' ? 'block' : 'none';
+            positionCard();
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('close-btn')) {
+                if (card.style.display === 'block') {
+                card.style.display = 'none';
+                }
+                if (segmentsConfigCard.style.display === 'block') {
+                    hideConfigCard();
+                }
+            }
+        });
+
+        card.querySelector('#add-segment-btn').addEventListener('click', showConfigCard);
+
+        const countdownToggle = card.querySelector('#yt-dance-countdownToggle');
+        const countdownInput = card.querySelector('#countdown-seconds');
+        const setTimerBtn = card.querySelector('#set-timer-btn');
+        
+        countdownInput.disabled = false;
+        setTimerBtn.disabled = false;
+
+        countdownToggle.addEventListener('change', () => {
+            countdownEnabled = countdownToggle.checked;
+            
+            countdownInput.disabled = false;
+            setTimerBtn.disabled = false;
+            
+            if (!countdownEnabled) {
+                stopCountdown();
+            } else {
+                checkAndStartCountdownIfNeeded();
+            }
+        });
+
+        setTimerBtn.addEventListener('click', () => {
+            const seconds = parseInt(countdownInput.value);
+            if (seconds >= 1 && seconds <= 60) {
+                countdownSeconds = seconds;
+                countdownInput.placeholder = seconds.toString();
+            }
+        });
+
+        try {
+            countdownAudio = new Audio(chrome.runtime.getURL('audio/countdown.mp3'));
+        } catch (e) {
+            console.log('Could not load countdown audio:', e);
+        }
+
+        function checkAndStartCountdownIfNeeded() {
+            if (countdownEnabled && !countdownJustFinished) {
+                const video = document.querySelector('video');
+                if (video && !video.paused) {
+                    startCountdown();
+                }
+            }
+        }
+
+        function validateTimeFormat(timeStr) {
+            const timeRegex = /^(\d+):([0-5]\d)$/;
+            return timeRegex.test(timeStr);
+        }
+
+        function parseTimeInput(timeStr) {
+            if (!validateTimeFormat(timeStr)) {
+                return null;
+            }
+            const parts = timeStr.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        function updateButtonStates() {
+            const startTimeInput = segmentsConfigCard.querySelector('#start-time');
+            const endTimeInput = segmentsConfigCard.querySelector('#end-time');
+            const currentStartBtn = segmentsConfigCard.querySelector('#current-start-btn');
+            const currentEndBtn = segmentsConfigCard.querySelector('#current-end-btn');
+
+            const startTime = parseTimeInput(startTimeInput.value);
+            const endTime = parseTimeInput(endTimeInput.value);
+            const currentVideoTime = getCurrentVideoTime();
+
+            if (endTime !== null && currentVideoTime > endTime) {
+                currentStartBtn.disabled = true;
+            } else {
+                currentStartBtn.disabled = false;
+            }
+
+            if (startTime !== null && currentVideoTime < startTime) {
+                currentEndBtn.disabled = true;
+            } else {
+                currentEndBtn.disabled = false;
+            }
+        }
+
+        segmentsConfigCard.querySelector('#current-start-btn').addEventListener('click', () => {
+            const startTimeInput = segmentsConfigCard.querySelector('#start-time');
+            const currentTime = getCurrentVideoTime();
+            startTimeInput.value = formatTimeDisplay(currentTime);
+            startTimeInput.dataset.exactTime = currentTime.toString();
+            delete startTimeInput.dataset.manualInput;
+            updateButtonStates();
+        });
+
+        segmentsConfigCard.querySelector('#current-end-btn').addEventListener('click', () => {
+            const endTimeInput = segmentsConfigCard.querySelector('#end-time');
+            const currentTime = getCurrentVideoTime();
+            endTimeInput.value = formatTimeDisplay(currentTime);
+            endTimeInput.dataset.exactTime = currentTime.toString();
+            delete endTimeInput.dataset.manualInput;
+            updateButtonStates();
+        });
+
+        segmentsConfigCard.querySelector('#start-time').addEventListener('input', () => {
+            const startTimeInput = segmentsConfigCard.querySelector('#start-time');
+            startTimeInput.dataset.manualInput = 'true';
+            delete startTimeInput.dataset.exactTime;
+            updateButtonStates();
+        });
+
+        segmentsConfigCard.querySelector('#end-time').addEventListener('input', () => {
+            const endTimeInput = segmentsConfigCard.querySelector('#end-time');
+            endTimeInput.dataset.manualInput = 'true';
+            delete endTimeInput.dataset.exactTime;
+            updateButtonStates();
+        });
+
+        function setupVideoTimeListener() {
+            const video = document.querySelector('video');
+            if (video) {
+                video.removeEventListener('timeupdate', handleTimeUpdate);
+                video.removeEventListener('seeked', handleSeeked);
+                video.removeEventListener('play', handlePlay);
+                video.removeEventListener('seeking', handleSeeking);
+                
+                video.addEventListener('timeupdate', handleTimeUpdate);
+                video.addEventListener('seeked', handleSeeked);
+                video.addEventListener('play', handlePlay);
+                video.addEventListener('seeking', handleSeeking);
+                
+                checkAndStartCountdownIfNeeded();
+            }
+        }
+
+        function handleTimeUpdate() {
+            updateButtonStates();
+            checkLoopSegment();
+            checkAndDisableLoopIfOutsideSegment();
+        }
+
+        function handleSeeked() {
+            updateButtonStates();
+            
+            if (isManualSeek && loopingSegmentIndex !== null && !loopJustEnabled && !isLoopRestarting) {
+                setLoopState(loopingSegmentIndex, false);
+            } else {
+                checkAndDisableLoopIfOutsideSegment();
+            }
+            
+            if (countdownEnabled && !countdownJustFinished) {
+                startCountdown();
+            }
+        }
+
+        function handlePlay() {
+            if (countdownEnabled && !countdownJustFinished) {
+                startCountdown();
+            }
+        }
+
+        function handleSeeking() {
+            isManualSeek = true;
+            setTimeout(() => {
+                isManualSeek = false;
+            }, 200);
+        }
+
+        function setupManualNavigationDetection() {
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.ytp-progress-bar') || 
+                    e.target.closest('.ytp-progress-list') ||
+                    e.target.closest('.ytp-progress-listener')) {
+                    isManualSeek = true;
+                    setTimeout(() => {
+                        isManualSeek = false;
+                    }, 300);
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || 
+                    e.key === 'Home' || e.key === 'End') {
+                    isManualSeek = true;
+                    setTimeout(() => {
+                        isManualSeek = false;
+                    }, 300);
+                }
+            });
+        }
+
+        function checkLoopSegment() {
+            if (loopingSegmentIndex !== null && !loopJustEnabled && !isLoopRestarting) {
+                const segment = segments[loopingSegmentIndex];
+                const video = document.querySelector('video');
+                if (video && video.currentTime >= segment.end) {
+                    if (!isManualSeek) {
+                        isLoopRestarting = true;
+                        video.currentTime = segment.start;
+                        if (countdownEnabled) {
+                            countdownJustFinished = false;
+                            startCountdown();
+                        }
+                        setTimeout(() => {
+                            isLoopRestarting = false;
+                        }, 200);
+                    } else {
+                        setLoopState(loopingSegmentIndex, false);
+                    }
+                }
+            }
+        }
+
+        setupVideoTimeListener();
+        setupManualNavigationDetection();
+
+        setTimeout(() => {
+            setupVideoTimeListener();
+        }, 2000);
+
+        segmentsConfigCard.querySelector('#save-segment-btn').addEventListener('click', () => {
+            const nameInput = segmentsConfigCard.querySelector('#segment-name');
+            const startTimeInput = segmentsConfigCard.querySelector('#start-time');
+            const endTimeInput = segmentsConfigCard.querySelector('#end-time');
+            
+            const name = nameInput.value.trim();
+            
+            let startTime, endTime;
+            
+            if (startTimeInput.dataset.exactTime) {
+                startTime = parseFloat(startTimeInput.dataset.exactTime);
+            } else if (startTimeInput.dataset.manualInput) {
+                startTime = parseTimeInput(startTimeInput.value);
+            } else {
+                startTime = parseTime(startTimeInput.value);
+            }
+            
+            if (endTimeInput.dataset.exactTime) {
+                endTime = parseFloat(endTimeInput.dataset.exactTime);
+            } else if (endTimeInput.dataset.manualInput) {
+                endTime = parseTimeInput(endTimeInput.value);
+            } else {
+                endTime = parseTime(endTimeInput.value);
+            }
+            
+            if (!name) {
+                alert('Please enter a section name.');
+                return;
+            }
+            
+            if (startTime === null) {
+                alert('Please enter a valid start time in MM:SS format (e.g., 1:30).');
+                return;
+            }
+            
+            if (endTime === null) {
+                alert('Please enter a valid end time in MM:SS format (e.g., 2:45).');
+                return;
+            }
+            
+            if (endTime <= startTime) {
+                alert('End time must be after start time.');
+                return;
+            }
+            
+            segments.push({
+                name: name,
+                start: startTime,
+                end: endTime,
+                videoId: currentVideoId
+            });
+            
+            saveSegments();
+            renderSegments();
+            
+            nameInput.value = '';
+            startTimeInput.value = '';
+            endTimeInput.value = '';
+            delete startTimeInput.dataset.exactTime;
+            delete startTimeInput.dataset.manualInput;
+            delete endTimeInput.dataset.exactTime;
+            delete endTimeInput.dataset.manualInput;
+            
+            hideConfigCard();
+        });
+
+        segmentsConfigCard.querySelector('#cancel-segment-btn').addEventListener('click', hideConfigCard);
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('segment-play-btn')) {
+                const index = parseInt(e.target.dataset.index);
+                const segment = segments[index];
+                const video = document.querySelector('video');
+                if (video) {
+                    setLoopState(loopingSegmentIndex, false);
+                    video.currentTime = segment.start;
+                    video.play();
+                    if (countdownEnabled) {
+                        countdownJustFinished = false;
+                        startCountdown();
+                    }
+                }
+            }
+            
+            if (e.target.classList.contains('segment-loop-btn') || e.target.closest('.segment-loop-btn')) {
+                const loopBtn = e.target.classList.contains('segment-loop-btn') ? e.target : e.target.closest('.segment-loop-btn');
+                const index = parseInt(loopBtn.dataset.index);
+                const segment = segments[index];
+                const video = document.querySelector('video');
+                if (video) {
+                    if (isSegmentLooping(index)) {
+                        setLoopState(index, false);
+                    } else {
+                        setLoopState(index, true);
+                        video.currentTime = segment.start;
+                        video.play();
+                        if (countdownEnabled) {
+                            countdownJustFinished = false;
+                            startCountdown();
+                        }
+                    }
+                }
+            }
+            
+            if (e.target.classList.contains('segment-delete-btn')) {
+                const index = parseInt(e.target.dataset.index);
+                segments.splice(index, 1);
+                if (loopingSegmentIndex === index) {
+                    setLoopState(index, false);
+                } else if (loopingSegmentIndex > index) {
+                    loopingSegmentIndex--;
+                }
+                saveSegments();
+                renderSegments();
+            }
+        });
+
+        loadSegments();
+
+        const observer = new MutationObserver(() => {
+            checkAndClosePopup();
+            handleVideoChange();
+            
+            const video = document.querySelector('video');
+            if (video && !video.hasAttribute('data-dance-listeners-setup')) {
+                video.setAttribute('data-dance-listeners-setup', 'true');
+                setupVideoTimeListener();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        window.addEventListener('popstate', () => {
+            checkAndClosePopup();
+            handleVideoChange();
+            setTimeout(checkAndDisableLoopIfOutsideSegment, 100);
+        });
+        window.addEventListener('pushstate', () => {
+            checkAndClosePopup();
+            handleVideoChange();
+            setTimeout(checkAndDisableLoopIfOutsideSegment, 100);
+        });
+        window.addEventListener('replacestate', () => {
+            checkAndClosePopup();
+            handleVideoChange();
+            setTimeout(checkAndDisableLoopIfOutsideSegment, 100);
+        });
+
+        const speedSlider = card.querySelector('#yt-dance-speedSlider');
+        const speedValue = card.querySelector('#yt-dance-speedValue');
+        speedSlider.addEventListener('input', () => {
+            const speed = parseFloat(speedSlider.value);
+            speedValue.textContent = speed.toFixed(2) + 'x';
+            const video = document.querySelector('video');
+            if (video) video.playbackRate = speed;
+        });
+
+        const mirrorToggle = card.querySelector('#yt-dance-mirrorToggle');
+        mirrorToggle.addEventListener('change', () => {
+            const video = document.querySelector('video');
+            if (video) video.style.transform = mirrorToggle.checked ? 'scaleX(-1)' : 'scaleX(1)';
+        });
+
+        const sliderTicks = card.querySelector('.slider-ticks');
+        const minSpeed = 0.1;
+        const maxSpeed = 1.0;
+        const step = 0.05;
+        const numSteps = Math.round((maxSpeed - minSpeed) / step);
+        const numTicks = numSteps + 1;
+        
+        for (let i = 0; i < numTicks; i++) {
+            const tick = document.createElement('div');
+            tick.className = 'slider-tick';
+            if (i % 2 === 0) tick.classList.add('slider-tick-major');
+            sliderTicks.appendChild(tick);
+        }
+
+        const titleBar = card.querySelector('#yt-dance-card-title-row') || card.querySelector('.yt-dance-card-title-row');
+        let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+        titleBar.style.cursor = 'move';
+        titleBar.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            const rect = card.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            document.body.style.userSelect = 'none';
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                card.style.left = (e.clientX - dragOffsetX) + 'px';
+                card.style.top = (e.clientY - dragOffsetY) + 'px';
+            }
+        });
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            document.body.style.userSelect = '';
+        });
+
+
     }
-    
-    if (video) {
-        console.log('Video element time:', video.currentTime);
-    }
-}, 100);
+
+    waitForPlayerControls(injectDanceButton);
+})();

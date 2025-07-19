@@ -1,6 +1,6 @@
 {
-    "name": "Hello Extensions",
-    "description": "Base Level Extension",
+    "name": "UMOVE",
+    "description": "Help people learn choreographies",
     "version": "1.0",
     "manifest_version": 3,
     "permissions": [
@@ -18,6 +18,7 @@
         {
             "matches": ["*://*.youtube.com/*"],
             "js": ["content.js"],
+            "css": ["content.css"],
             "run_at": "document_end"
         }
     ],
@@ -25,7 +26,6 @@
         "service_worker": "background.js"
     },
     "action": {
-        "default_popup": "popup/popup.html",
         "default_icon": "icons/icon.jpg"
     },
     "web_accessible_resources": [
