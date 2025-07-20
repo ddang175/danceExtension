@@ -74,6 +74,18 @@
               <div class="segments-list" id="segments-list"></div>
               <button class="add-segment-btn" id="add-segment-btn">Add Section</button>
             </div>
+            <div class="metronome-section">
+              <div class="metronome-title-row">
+                <div class="metronome-title">Metronome</div>
+                <label class="toggle-switch" id="metronome-toggle" style="display: none;">
+                  <input type="checkbox" id="metronome-toggle-input">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="metronome-content">
+                <button class="configure-metronome-btn" id="configure-metronome-btn">Configure Timing</button>
+              </div>
+            </div>
           </div>
         `;
         document.body.appendChild(card);
@@ -115,6 +127,44 @@
         `;
         document.body.appendChild(segmentsConfigCard);
 
+        const metronomeConfigCard = document.createElement('div');
+        metronomeConfigCard.id = 'metronome-config-card';
+        metronomeConfigCard.style.display = 'none';
+        metronomeConfigCard.innerHTML = `
+          <div class="metronome-config-inner">
+            <div class="metronome-config-title-row">
+              <div class="metronome-config-title">Configure Metronome</div>
+              <button class="close-btn" title="Close">×</button>
+            </div>
+            <div class="metronome-config-content">
+              <div class="metronome-instructions">
+                <p>1. Play the video and listen to the beat</p>
+                <p>2. Press <strong>B</strong> or tap the button below to the beat</p>
+                <p>3. Continue tapping for 15 seconds to establish timing</p>
+              </div>
+              <div class="metronome-tap-section">
+                <div class="tap-counter" id="tap-counter">0 taps</div>
+                <div class="tap-timer" id="tap-timer">15</div>
+                <button class="tap-button" id="tap-button">TAP TO BEAT</button>
+              </div>
+              <div class="metronome-results" id="metronome-results" style="display: none;">
+                <div class="results-title">Timing Results</div>
+                <div class="results-content">
+                  <div class="result-item">
+                    <span class="result-label">BPM:</span>
+                    <span class="result-value" id="bpm-result">0</span>
+                  </div>
+                  <div class="result-item">
+                    <span class="result-label">Start Time:</span>
+                    <span class="result-value" id="start-time-result">0:00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(metronomeConfigCard);
+
         const countdownDisplay = document.createElement('div');
         countdownDisplay.id = 'countdown-display';
         countdownDisplay.style.display = 'none';
@@ -139,6 +189,21 @@
         let isManualSeek = false;
         let loopJustEnabled = false;
         let isLoopRestarting = false;
+        
+        let metronomeEnabled = false;
+        let metronomeBPM = 0;
+        let metronomeStartTime = 0;
+        let metronomeBeatTimestamps = [];
+        let metronomeNextBeatIndex = 0;
+        let metronomeInterval = null;
+        let metronomeAudio = null;
+        
+        let tapTimings = [];
+        let tapVideoTimings = [];
+        let tapStartTime = 0;
+        let tapTimer = 15;
+        let tapInterval = null;
+        let isTapping = false;
         
         function isSegmentLooping(index) {
             return loopingSegmentIndex === index;
@@ -218,9 +283,18 @@
             const videoId = getVideoId();
             if (videoId !== currentVideoId) {
                 currentVideoId = videoId;
-                chrome.storage.local.get(['segments_' + videoId], (result) => {
+                chrome.storage.local.get(['segments_' + videoId, 'metronome_' + videoId], (result) => {
                     segments = result['segments_' + videoId] || [];
                     renderSegments();
+                    
+                    const metronomeData = result['metronome_' + videoId];
+                    if (metronomeData) {
+                        metronomeBPM = metronomeData.bpm;
+                        metronomeBeatTimestamps = metronomeData.beatTimestamps || [];
+                        updateMetronomeUI();
+                    } else {
+                        resetMetronomeUI();
+                    }
                 });
             }
         }
@@ -235,9 +309,17 @@
                 countdownJustFinished = false;
                 stopCountdown();
                 
+                metronomeEnabled = false;
+                stopMetronome();
+                
                 const countdownToggle = card.querySelector('#yt-dance-countdownToggle');
                 if (countdownToggle) {
                     countdownToggle.checked = false;
+                }
+                
+                const metronomeToggle = card.querySelector('#metronome-toggle-input');
+                if (metronomeToggle) {
+                    metronomeToggle.checked = false;
                 }
                 
                 setTimeout(() => {
@@ -265,6 +347,44 @@
         function saveSegments() {
             if (currentVideoId) {
                 chrome.storage.local.set({ ['segments_' + currentVideoId]: segments });
+            }
+        }
+
+        function saveMetronomeData() {
+            if (currentVideoId && metronomeBPM > 0) {
+                chrome.storage.local.set({
+                    ['metronome_' + currentVideoId]: {
+                        bpm: metronomeBPM,
+                        beatTimestamps: metronomeBeatTimestamps
+                    }
+                });
+                console.log('Metronome data saved to storage for video:', currentVideoId);
+                console.log('Saved timestamps count:', metronomeBeatTimestamps.length);
+            }
+        }
+
+        function updateMetronomeUI() {
+            const toggle = document.getElementById('metronome-toggle');
+            const configureBtn = document.getElementById('configure-metronome-btn');
+            
+            if (metronomeBPM > 0) {
+                toggle.style.display = 'block';
+                configureBtn.textContent = 'Reconfigure Timing';
+            } else {
+                toggle.style.display = 'none';
+                configureBtn.textContent = 'Configure Timing';
+            }
+        }
+
+        function resetMetronomeUI() {
+            metronomeBPM = 0;
+            metronomeBeatTimestamps = [];
+            metronomeEnabled = false;
+            updateMetronomeUI();
+            
+            const toggleInput = document.getElementById('metronome-toggle-input');
+            if (toggleInput) {
+                toggleInput.checked = false;
             }
         }
 
@@ -310,6 +430,44 @@
             segmentsConfigCard.style.display = 'none';
             card.style.display = 'block';
             positionCard();
+        }
+
+        function showMetronomeConfigCard() {
+            card.style.display = 'none';
+            metronomeConfigCard.style.display = 'block';
+            positionMetronomeConfigCard();
+            resetTapSession();
+            
+            if (metronomeEnabled) {
+                stopMetronome();
+            }
+        }
+
+        function hideMetronomeConfigCard() {
+            metronomeConfigCard.style.display = 'none';
+            card.style.display = 'block';
+            positionCard();
+            
+            if (tapInterval) {
+                clearInterval(tapInterval);
+                tapInterval = null;
+            }
+            isTapping = false;
+            resetTapSession();
+            
+            if (metronomeEnabled) {
+                startMetronome();
+            }
+        }
+
+        function positionMetronomeConfigCard() {
+            const player = document.querySelector('.html5-video-player');
+            if (!player) return;
+            const rect = player.getBoundingClientRect();
+            metronomeConfigCard.style.position = 'fixed';
+            metronomeConfigCard.style.left = (rect.right - 340) + 'px';
+            metronomeConfigCard.style.top = (rect.top + 50) + 'px';
+            metronomeConfigCard.style.zIndex = 10000;
         }
 
         function positionConfigCard() {
@@ -371,6 +529,169 @@
             }
         }
 
+        function resetTapSession() {
+            tapTimings = [];
+            tapVideoTimings = [];
+            tapTimer = 15;
+            isTapping = false;
+            
+            const tapCounter = document.getElementById('tap-counter');
+            const tapTimerEl = document.getElementById('tap-timer');
+            const results = document.getElementById('metronome-results');
+            const tapButton = document.getElementById('tap-button');
+            
+            if (tapCounter) tapCounter.textContent = '0 taps';
+            if (tapTimerEl) tapTimerEl.textContent = '15';
+            if (results) results.style.display = 'none';
+            
+            if (tapButton) {
+                tapButton.textContent = 'TAP TO BEAT';
+                tapButton.onclick = null;
+            }
+        }
+
+        function startTapSession() {
+            if (isTapping) return;
+            
+            isTapping = true;
+            tapStartTime = Date.now();
+            tapTimings = [];
+            
+            tapInterval = setInterval(() => {
+                tapTimer--;
+                const tapTimerEl = document.getElementById('tap-timer');
+                if (tapTimerEl) tapTimerEl.textContent = tapTimer;
+                
+                if (tapTimer <= 0) {
+                    endTapSession();
+                }
+            }, 1000);
+        }
+
+        function endTapSession() {
+            clearInterval(tapInterval);
+            isTapping = false;
+            
+            if (tapTimings.length >= 8) {
+                calculateMetronomeTiming();
+                if (metronomeBPM >= 80 && metronomeBPM <= 180) {
+                    showMetronomeResults();
+                } else {
+                    alert('Calculated BPM (' + metronomeBPM + ') is outside the valid range (80-180 BPM). Please try again with more consistent tapping.');
+                    resetTapSession();
+                }
+            } else {
+                alert('Please tap at least 8 times to establish accurate timing.');
+                resetTapSession();
+            }
+        }
+
+        function recordTap() {
+            if (!isTapping) {
+                startTapSession();
+            }
+            
+            const currentTime = performance.now();
+            const video = document.querySelector('video');
+            const videoTime = video ? video.currentTime : 0;
+            
+            tapTimings.push(currentTime);
+            tapVideoTimings.push(videoTime);
+            
+            const tapCounter = document.getElementById('tap-counter');
+            if (tapCounter) {
+                tapCounter.textContent = tapTimings.length + ' taps';
+            }
+        }
+
+        function calculateMetronomeTiming() {
+            if (tapVideoTimings.length < 8) return;
+            
+            const videoIntervals = [];
+            for (let i = 1; i < tapVideoTimings.length; i++) {
+                videoIntervals.push(tapVideoTimings[i] - tapVideoTimings[i-1]);
+            }
+            
+            const medianInterval = videoIntervals.sort((a, b) => a - b)[Math.floor(videoIntervals.length / 2)];
+            const filteredIntervals = videoIntervals.filter(interval => 
+                Math.abs(interval - medianInterval) / medianInterval <= 0.2
+            );
+            
+            if (filteredIntervals.length < 3) return;
+            
+            const avgVideoInterval = filteredIntervals.reduce((a, b) => a + b, 0) / filteredIntervals.length;
+            metronomeBPM = Math.round(60 / avgVideoInterval);
+            
+            if (metronomeBPM < 80 || metronomeBPM > 180) return;
+            
+            const firstTapTime = tapVideoTimings[0];
+            const videoStart = 0;
+            const beatsFromStart = (firstTapTime - videoStart) * (metronomeBPM / 60);
+            const phaseOffset = beatsFromStart % 1;
+            const startDelay = phaseOffset * (60 / metronomeBPM);
+            
+            const video = document.querySelector('video');
+            if (video) {
+                const videoDuration = video.duration;
+                metronomeBeatTimestamps = [];
+                
+                let beatNumber = 0;
+                let metronomeTimestamp = startDelay + (beatNumber * 60 / metronomeBPM);
+                
+                while (metronomeTimestamp <= videoDuration) {
+                    if (metronomeTimestamp >= 0) {
+                        metronomeBeatTimestamps.push(parseFloat(metronomeTimestamp.toFixed(6)));
+                    }
+                    beatNumber++;
+                    metronomeTimestamp = startDelay + (beatNumber * 60 / metronomeBPM);
+                }
+                
+                console.log('Metronome Configuration:');
+                console.log('BPM:', metronomeBPM);
+                console.log('First tap time:', firstTapTime);
+                console.log('Start delay:', startDelay);
+                console.log('Total beats generated:', metronomeBeatTimestamps.length);
+                console.log('First 10 timestamps:', metronomeBeatTimestamps.slice(0, 10));
+                console.log('Last 10 timestamps:', metronomeBeatTimestamps.slice(-10));
+            }
+        }
+
+        function showMetronomeResults() {
+            const results = document.getElementById('metronome-results');
+            const bpmResult = document.getElementById('bpm-result');
+            const startTimeResult = document.getElementById('start-time-result');
+            const tapButton = document.getElementById('tap-button');
+            
+            if (results && bpmResult && startTimeResult) {
+                bpmResult.textContent = metronomeBPM;
+                const firstTapTime = tapVideoTimings[0];
+                const beatsFromStart = (firstTapTime - 0) * (metronomeBPM / 60);
+                const phaseOffset = beatsFromStart % 1;
+                const startDelay = phaseOffset * (60 / metronomeBPM);
+                
+                console.log('Results Debug:');
+                console.log('First tap time:', firstTapTime);
+                console.log('Beats from start:', beatsFromStart);
+                console.log('Phase offset:', phaseOffset);
+                console.log('Start delay:', startDelay);
+                console.log('First beat timestamp:', metronomeBeatTimestamps[0]);
+                
+                startTimeResult.textContent = formatTimeDisplay(metronomeBeatTimestamps[0]);
+                results.style.display = 'block';
+                
+                if (tapButton) {
+                    tapButton.textContent = 'Retry';
+                    tapButton.onclick = () => {
+                        resetTapSession();
+                        showMetronomeResults();
+                    };
+                }
+                
+                saveMetronomeData();
+                updateMetronomeUI();
+            }
+        }
+
         function positionCard() {
             const player = document.querySelector('.html5-video-player');
             if (!player) return;
@@ -399,10 +720,42 @@
                 if (segmentsConfigCard.style.display === 'block') {
                     hideConfigCard();
                 }
+                if (metronomeConfigCard.style.display === 'block') {
+                    hideMetronomeConfigCard();
+                }
+            }
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'tap-button' && tapTimer > 0 && e.target.textContent === 'TAP TO BEAT') {
+                recordTap();
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'b' && metronomeConfigCard.style.display === 'block' && tapTimer > 0) {
+                recordTap();
             }
         });
 
         card.querySelector('#add-segment-btn').addEventListener('click', showConfigCard);
+        
+        const configureMetronomeBtn = card.querySelector('#configure-metronome-btn');
+        if (configureMetronomeBtn) {
+            configureMetronomeBtn.addEventListener('click', showMetronomeConfigCard);
+        }
+        
+        const metronomeToggle = card.querySelector('#metronome-toggle-input');
+        if (metronomeToggle) {
+            metronomeToggle.addEventListener('change', () => {
+                metronomeEnabled = metronomeToggle.checked;
+                if (metronomeEnabled) {
+                    startMetronome();
+                } else {
+                    stopMetronome();
+                }
+            });
+        }
 
         const countdownToggle = card.querySelector('#yt-dance-countdownToggle');
         const countdownInput = card.querySelector('#countdown-seconds');
@@ -434,8 +787,9 @@
 
         try {
             countdownAudio = new Audio(chrome.runtime.getURL('audio/countdown.mp3'));
+            metronomeAudio = new Audio(chrome.runtime.getURL('audio/metronome.mp3'));
         } catch (e) {
-            console.log('Could not load countdown audio:', e);
+            console.log('Could not load audio:', e);
         }
 
         function checkAndStartCountdownIfNeeded() {
@@ -444,6 +798,58 @@
                 if (video && !video.paused) {
                     startCountdown();
                 }
+            }
+        }
+
+        function startMetronome() {
+            if (!metronomeEnabled || metronomeBeatTimestamps.length === 0) return;
+            
+            const video = document.querySelector('video');
+            if (!video) return;
+            
+            if (metronomeInterval) {
+                clearInterval(metronomeInterval);
+            }
+            
+            const currentTime = video.currentTime;
+            metronomeNextBeatIndex = 0;
+            
+            const calculateOffset = (bpm) => {
+                if (bpm <= 112) return -0.09;
+                if (bpm >= 172) return -0.079;
+                
+                const slope = (-0.079 - (-0.09)) / (172 - 112);
+                const offset = -0.09 + slope * (bpm - 112);
+                return parseFloat(offset.toFixed(6));
+            };
+            
+            const dynamicOffset = calculateOffset(metronomeBPM);
+            
+            while (metronomeNextBeatIndex < metronomeBeatTimestamps.length && 
+                   currentTime >= (metronomeBeatTimestamps[metronomeNextBeatIndex] + dynamicOffset)) {
+                metronomeNextBeatIndex++;
+            }
+            
+            metronomeInterval = setInterval(() => {
+                const video = document.querySelector('video');
+                if (!video || video.paused) return;
+                
+                const currentTime = video.currentTime;
+                
+                while (metronomeNextBeatIndex < metronomeBeatTimestamps.length && 
+                       currentTime >= (metronomeBeatTimestamps[metronomeNextBeatIndex] + dynamicOffset)) {
+                    if (metronomeAudio) {
+                        metronomeAudio.play().catch(e => console.log('Metronome audio play failed:', e));
+                    }
+                    metronomeNextBeatIndex++;
+                }
+            }, 50);
+        }
+
+        function stopMetronome() {
+            if (metronomeInterval) {
+                clearInterval(metronomeInterval);
+                metronomeInterval = null;
             }
         }
 
@@ -549,6 +955,10 @@
             
             if (countdownEnabled && !countdownJustFinished) {
                 startCountdown();
+            }
+            
+            if (metronomeEnabled) {
+                startMetronome();
             }
         }
 
