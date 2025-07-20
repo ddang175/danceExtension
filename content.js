@@ -154,10 +154,6 @@
                     <span class="result-label">BPM:</span>
                     <span class="result-value" id="bpm-result">0</span>
                   </div>
-                  <div class="result-item">
-                    <span class="result-label">Start Time:</span>
-                    <span class="result-value" id="start-time-result">0:00</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -321,7 +317,17 @@
                 if (metronomeToggle) {
                     metronomeToggle.checked = false;
                 }
-                
+
+                // Reset mirror toggle and video transform
+                const mirrorToggle = card.querySelector('#yt-dance-mirrorToggle');
+                if (mirrorToggle) {
+                    mirrorToggle.checked = false;
+                }
+                const video = document.querySelector('video');
+                if (video) {
+                    video.style.transform = 'scaleX(1)';
+                }
+
                 setTimeout(() => {
                     setupVideoTimeListener();
                 }, 1000);
@@ -358,8 +364,6 @@
                         beatTimestamps: metronomeBeatTimestamps
                     }
                 });
-                console.log('Metronome data saved to storage for video:', currentVideoId);
-                console.log('Saved timestamps count:', metronomeBeatTimestamps.length);
             }
         }
 
@@ -421,21 +425,31 @@
         }
 
         function showConfigCard() {
+            // Set config card position to match main card
+            segmentsConfigCard.style.left = card.style.left;
+            segmentsConfigCard.style.top = card.style.top;
+            segmentsConfigCard.style.position = 'fixed';
+            segmentsConfigCard.style.zIndex = 10000;
             card.style.display = 'none';
             segmentsConfigCard.style.display = 'block';
-            positionConfigCard();
+            // Removed: positionConfigCard();
         }
 
         function hideConfigCard() {
             segmentsConfigCard.style.display = 'none';
             card.style.display = 'block';
-            positionCard();
+            // Removed: positionCard();
         }
 
         function showMetronomeConfigCard() {
+            // Set config card position to match main card
+            metronomeConfigCard.style.left = card.style.left;
+            metronomeConfigCard.style.top = card.style.top;
+            metronomeConfigCard.style.position = 'fixed';
+            metronomeConfigCard.style.zIndex = 10000;
             card.style.display = 'none';
             metronomeConfigCard.style.display = 'block';
-            positionMetronomeConfigCard();
+            // Removed: positionMetronomeConfigCard();
             resetTapSession();
             
             if (metronomeEnabled) {
@@ -446,7 +460,7 @@
         function hideMetronomeConfigCard() {
             metronomeConfigCard.style.display = 'none';
             card.style.display = 'block';
-            positionCard();
+            // Removed: positionCard();
             
             if (tapInterval) {
                 clearInterval(tapInterval);
@@ -646,37 +660,16 @@
                     metronomeTimestamp = startDelay + (beatNumber * 60 / metronomeBPM);
                 }
                 
-                console.log('Metronome Configuration:');
-                console.log('BPM:', metronomeBPM);
-                console.log('First tap time:', firstTapTime);
-                console.log('Start delay:', startDelay);
-                console.log('Total beats generated:', metronomeBeatTimestamps.length);
-                console.log('First 10 timestamps:', metronomeBeatTimestamps.slice(0, 10));
-                console.log('Last 10 timestamps:', metronomeBeatTimestamps.slice(-10));
             }
         }
 
         function showMetronomeResults() {
             const results = document.getElementById('metronome-results');
             const bpmResult = document.getElementById('bpm-result');
-            const startTimeResult = document.getElementById('start-time-result');
             const tapButton = document.getElementById('tap-button');
             
-            if (results && bpmResult && startTimeResult) {
+            if (results && bpmResult) {
                 bpmResult.textContent = metronomeBPM;
-                const firstTapTime = tapVideoTimings[0];
-                const beatsFromStart = (firstTapTime - 0) * (metronomeBPM / 60);
-                const phaseOffset = beatsFromStart % 1;
-                const startDelay = phaseOffset * (60 / metronomeBPM);
-                
-                console.log('Results Debug:');
-                console.log('First tap time:', firstTapTime);
-                console.log('Beats from start:', beatsFromStart);
-                console.log('Phase offset:', phaseOffset);
-                console.log('Start delay:', startDelay);
-                console.log('First beat timestamp:', metronomeBeatTimestamps[0]);
-                
-                startTimeResult.textContent = formatTimeDisplay(metronomeBeatTimestamps[0]);
                 results.style.display = 'block';
                 
                 if (tapButton) {
@@ -1227,6 +1220,78 @@
             isDragging = false;
             document.body.style.userSelect = '';
         });
+
+        // --- Add active animation to all buttons except loop button ---
+        const style = document.createElement('style');
+        style.textContent = `
+        .button-active-anim {
+            animation: buttonActiveAnim 0.18s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes buttonActiveAnim {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 #ff000033; }
+            60% { transform: scale(0.92); box-shadow: 0 0 8px 2px #ff000033; }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 #ff000033; }
+        }
+        `;
+        document.head.appendChild(style);
+
+        function addActiveAnimToButton(btn) {
+            btn.addEventListener('click', function(e) {
+                // Don't animate loop button
+                if (btn.classList.contains('segment-loop-btn')) return;
+                btn.classList.remove('button-active-anim');
+                // Force reflow for retrigger
+                void btn.offsetWidth;
+                btn.classList.add('button-active-anim');
+                setTimeout(() => btn.classList.remove('button-active-anim'), 180);
+            });
+        }
+
+        // List of selectors for all buttons except loop button
+        const buttonSelectors = [
+            '#yt-dance-btn',
+            '.close-btn',
+            '#set-timer-btn',
+            '#add-segment-btn',
+            '#configure-metronome-btn',
+            '#current-start-btn',
+            '#current-end-btn',
+            '#save-segment-btn',
+            '#cancel-segment-btn',
+            '#tap-button',
+            '.segment-play-btn',
+            '.segment-delete-btn'
+        ];
+        function applyActiveAnimToAllButtons() {
+            buttonSelectors.forEach(sel => {
+                document.querySelectorAll(sel).forEach(addActiveAnimToButton);
+            });
+        }
+        // Initial application
+        applyActiveAnimToAllButtons();
+        // Re-apply after dynamic UI changes
+        const observerActiveAnim = new MutationObserver(applyActiveAnimToAllButtons);
+        observerActiveAnim.observe(document.body, { childList: true, subtree: true });
+
+        // --- YouTube-style speed slider background ---
+        function updateSpeedSliderBg(slider) {
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const val = parseFloat(slider.value);
+            const percent = ((val - min) / (max - min)) * 100;
+            slider.style.background = `linear-gradient(to right, #fff 0%, #fff ${percent}%, #444 ${percent}%, #444 100%)`;
+        }
+        // Find and update all speed sliders
+        function applySpeedSliderBg() {
+            document.querySelectorAll('.speed-slider').forEach(slider => {
+                updateSpeedSliderBg(slider);
+                slider.addEventListener('input', () => updateSpeedSliderBg(slider));
+            });
+        }
+        applySpeedSliderBg();
+        // In case of dynamic UI, observe and re-apply
+        const observerSpeedSlider = new MutationObserver(applySpeedSliderBg);
+        observerSpeedSlider.observe(document.body, { childList: true, subtree: true });
 
 
     }

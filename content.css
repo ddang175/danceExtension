@@ -160,13 +160,14 @@
 }
 .speed-slider {
   width: 320px;
-  height: 8px;
+  height: 5px;
   border-radius: 4px;
-  background: #444;
+  background: #444; /* fallback */
   outline: none;
   -webkit-appearance: none;
   position: relative;
   z-index: 2;
+  background: linear-gradient(to right, #fff 0%, #fff 50%, #444 50%, #444 100%); /* will be set by JS */
 }
 .speed-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -174,17 +175,30 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #ff0000;
+  background: #fff;
   cursor: pointer;
   border: 2px solid #fff;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.15);
 }
 .speed-slider::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #ff0000;
+  background: #fff;
   cursor: pointer;
   border: 2px solid #fff;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.15);
+}
+.speed-slider::-ms-fill-lower {
+  background: #fff;
+  border-radius: 4px;
+}
+.speed-slider::-ms-fill-upper {
+  background: #444;
+  border-radius: 4px;
+}
+.speed-slider:focus {
+  outline: none;
 }
 .slider-ticks {
   position: absolute;
