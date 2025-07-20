@@ -16,7 +16,7 @@
         btn.id = 'yt-dance-btn';
         btn.className = 'ytp-button';
         btn.title = 'Dance Controls';
-        btn.innerHTML = '<svg height="100%" viewBox="0 9.47 70.04 36.4" width="100%" style="fill:white;"><path d="M23.41 9.47L28.15 9.47L28.15 30.15Q28.15 35.55 26.93 38.72Q25.71 41.89 22.52 43.88Q19.34 45.87 14.16 45.87Q9.13 45.87 5.93 44.14Q2.73 42.41 1.37 39.12Q0 35.84 0 30.15L0 9.47L4.74 9.47L4.74 30.13Q4.74 34.79 5.60 37.00Q6.47 39.21 8.58 40.41Q10.69 41.60 13.75 41.60Q18.97 41.60 21.19 39.23Q23.41 36.87 23.41 30.13L23.41 9.47ZM35.89 45.26L35.89 9.47L43.02 9.47L51.49 34.81Q52.66 38.35 53.20 40.11Q53.81 38.16 55.10 34.38L63.67 9.47L70.04 9.47L70.04 45.26L65.48 45.26L65.48 15.31L55.08 45.26L50.81 45.26L40.45 14.79L40.45 45.26L35.89 45.26Z"/></svg>';
+        btn.innerHTML = '<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1080 1080" style="fill:white; width: 28px; height: 28px; display: block; margin: auto;"><defs><style>.st0{fill:#ffffff;}</style></defs><path class="st0" d="M33.24,265.13,33.24,802.57,33.24,802.57h162.29c9.8,0,19.63-.19,29.35-1.46,168.26-22.04,247.57-215.7,200.08-369.74-39.05-114.83-116.21-166.18-232.38-166.24H33.24v-122.66s20.16.58,47.65.58h99.31c109.56,0,209.18,31.58,286.82,109.21,77.62,77.63,110.43,178.47,110.43,288.04s-29.86,208.19-107.48,285.82c-77.63,77.63-180.2,111.42-289.76,111.42H33.24v-134.96Z"/><path class="st0" d="M909.29,476.64l-47.38,122.88c-45.8-24.83-89.42-10.84-89.42-10.84-14.95,2.1-29.3,8.07-41.34,17.19-31.15,23.61-46.11,53.83-44.88,90.66.84,25.24,10.96,49.26,28.32,67.61,21.02,22.21,46.57,33.31,76.68,33.31s53.7-10.27,74.25-30.82l29.24-24.06c13.99-9.1,28.4-13.17,46.37-13.06,35,.22,56.52,20.08,70.13,59.94,11.02,32.26,21.52,80.44,21.52,80.44l13.98,67.65h-131.33s-4.04-26.38-6.14-29.42c-47.03,26.17-101.34,34.88-162.92,26.14-34.12-4.84-66.73-18.36-94.31-39.04-78.14-58.59-113.06-135.1-104.76-229.53,4.11-46.8,22.82-91.65,53.09-127.57,51.06-60.58,114.68-90.89,190.87-90.89,43.43,0,82.77,9.81,118.02,29.42"/><circle class="st0" cx="674.55" cy="311.84" r="97.12"/></svg>';
         btn.style.marginLeft = '8px';
         controls.insertBefore(btn, controls.firstChild);
 
@@ -28,8 +28,13 @@
         ];
         card.innerHTML = `
           <div class="yt-dance-card-inner">
-            <div class="yt-dance-card-title-row">
-              <div class="yt-dance-card-title" id="yt-dance-card-title">Dance Controls</div>
+            <div class="yt-dance-card-title-row" style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center;">
+                <span class="yt-dance-logo" style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:8px;">
+                  <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1080 1080" style="fill:white; width: 28px; height: 28px; display: block;"><defs><style>.st0{fill:#ffffff;}</style></defs><path class="st0" d="M33.24,265.13,33.24,802.57,33.24,802.57h162.29c9.8,0,19.63-.19,29.35-1.46,168.26-22.04,247.57-215.7,200.08-369.74-39.05-114.83-116.21-166.18-232.38-166.24H33.24v-122.66s20.16.58,47.65.58h99.31c109.56,0,209.18,31.58,286.82,109.21,77.62,77.63,110.43,178.47,110.43,288.04s-29.86,208.19-107.48,285.82c-77.63,77.63-180.2,111.42-289.76,111.42H33.24v-134.96Z"/><path class="st0" d="M909.29,476.64l-47.38,122.88c-45.8-24.83-89.42-10.84-89.42-10.84-14.95,2.1-29.3,8.07-41.34,17.19-31.15,23.61-46.11,53.83-44.88,90.66.84,25.24,10.96,49.26,28.32,67.61,21.02,22.21,46.57,33.31,76.68,33.31s53.7-10.27,74.25-30.82l29.24-24.06c13.99-9.1,28.4-13.17,46.37-13.06,35,.22,56.52,20.08,70.13,59.94,11.02,32.26,21.52,80.44,21.52,80.44l13.98,67.65h-131.33s-4.04-26.38-6.14-29.42c-47.03,26.17-101.34,34.88-162.92,26.14-34.12-4.84-66.73-18.36-94.31-39.04-78.14-58.59-113.06-135.1-104.76-229.53,4.11-46.8,22.82-91.65,53.09-127.57,51.06-60.58,114.68-90.89,190.87-90.89,43.43,0,82.77,9.81,118.02,29.42"/><circle class="st0" cx="674.55" cy="311.84" r="97.12"/></svg>
+                </span>
+                <div class="yt-dance-card-title" id="yt-dance-card-title" style="margin:0;">Dancer</div>
+              </div>
               <button class="close-btn" title="Close">×</button>
             </div>
             <div class="mirror-toggle-row">
@@ -253,13 +258,8 @@
             return getVideoId() !== null;
         }
 
+        // Merge formatTime and formatTimeDisplay
         function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function formatTimeDisplay(seconds) {
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -279,19 +279,22 @@
             const videoId = getVideoId();
             if (videoId !== currentVideoId) {
                 currentVideoId = videoId;
-                chrome.storage.local.get(['segments_' + videoId, 'metronome_' + videoId], (result) => {
-                    segments = result['segments_' + videoId] || [];
-                    renderSegments();
-                    
-                    const metronomeData = result['metronome_' + videoId];
-                    if (metronomeData) {
-                        metronomeBPM = metronomeData.bpm;
-                        metronomeBeatTimestamps = metronomeData.beatTimestamps || [];
-                        updateMetronomeUI();
-                    } else {
-                        resetMetronomeUI();
-                    }
-                });
+                try {
+                    chrome.storage.local.get(['segments_' + videoId, 'metronome_' + videoId], (result) => {
+                        segments = result['segments_' + videoId] || [];
+                        renderSegments();
+                        const metronomeData = result['metronome_' + videoId];
+                        if (metronomeData) {
+                            metronomeBPM = metronomeData.bpm;
+                            metronomeBeatTimestamps = metronomeData.beatTimestamps || [];
+                            updateMetronomeUI();
+                        } else {
+                            resetMetronomeUI();
+                        }
+                    });
+                } catch (e) {
+                    // Extension context invalidated, ignore
+                }
             }
         }
 
@@ -352,18 +355,26 @@
 
         function saveSegments() {
             if (currentVideoId) {
-                chrome.storage.local.set({ ['segments_' + currentVideoId]: segments });
+                try {
+                    chrome.storage.local.set({ ['segments_' + currentVideoId]: segments });
+                } catch (e) {
+                    // Extension context invalidated, ignore
+                }
             }
         }
 
         function saveMetronomeData() {
             if (currentVideoId && metronomeBPM > 0) {
-                chrome.storage.local.set({
-                    ['metronome_' + currentVideoId]: {
-                        bpm: metronomeBPM,
-                        beatTimestamps: metronomeBeatTimestamps
-                    }
-                });
+                try {
+                    chrome.storage.local.set({
+                        ['metronome_' + currentVideoId]: {
+                            bpm: metronomeBPM,
+                            beatTimestamps: metronomeBeatTimestamps
+                        }
+                    });
+                } catch (e) {
+                    // Extension context invalidated, ignore
+                }
             }
         }
 
@@ -408,7 +419,7 @@
                     segmentEl.innerHTML = `
                         <div class="segment-info">
                             <div class="segment-name">${segment.name}</div>
-                            <div class="segment-time">${formatTimeDisplay(segment.start)} - ${formatTimeDisplay(segment.end)}</div>
+                            <div class="segment-time">${formatTime(segment.start)} - ${formatTime(segment.end)}</div>
                         </div>
                         <div class="segment-actions">
                             <button class="segment-play-btn" data-index="${index}">▶</button>
@@ -472,26 +483,6 @@
             if (metronomeEnabled) {
                 startMetronome();
             }
-        }
-
-        function positionMetronomeConfigCard() {
-            const player = document.querySelector('.html5-video-player');
-            if (!player) return;
-            const rect = player.getBoundingClientRect();
-            metronomeConfigCard.style.position = 'fixed';
-            metronomeConfigCard.style.left = (rect.right - 340) + 'px';
-            metronomeConfigCard.style.top = (rect.top + 50) + 'px';
-            metronomeConfigCard.style.zIndex = 10000;
-        }
-
-        function positionConfigCard() {
-            const player = document.querySelector('.html5-video-player');
-            if (!player) return;
-            const rect = player.getBoundingClientRect();
-            segmentsConfigCard.style.position = 'fixed';
-            segmentsConfigCard.style.left = (rect.right - 340) + 'px';
-            segmentsConfigCard.style.top = (rect.top + 50) + 'px';
-            segmentsConfigCard.style.zIndex = 10000;
         }
 
         function startCountdown() {
@@ -689,9 +680,10 @@
             const player = document.querySelector('.html5-video-player');
             if (!player) return;
             const rect = player.getBoundingClientRect();
+            const margin = 24; // px
             card.style.position = 'fixed';
-            card.style.left = (rect.right - 340) + 'px';
-            card.style.top = (rect.top + 50) + 'px';
+            card.style.left = (rect.right - 340 - margin) + 'px';
+            card.style.top = (rect.top + margin) + 'px';
             card.style.zIndex = 10000;
         }
         positionCard();
@@ -885,7 +877,7 @@
         segmentsConfigCard.querySelector('#current-start-btn').addEventListener('click', () => {
             const startTimeInput = segmentsConfigCard.querySelector('#start-time');
             const currentTime = getCurrentVideoTime();
-            startTimeInput.value = formatTimeDisplay(currentTime);
+            startTimeInput.value = formatTime(currentTime);
             startTimeInput.dataset.exactTime = currentTime.toString();
             delete startTimeInput.dataset.manualInput;
             updateButtonStates();
@@ -894,7 +886,7 @@
         segmentsConfigCard.querySelector('#current-end-btn').addEventListener('click', () => {
             const endTimeInput = segmentsConfigCard.querySelector('#end-time');
             const currentTime = getCurrentVideoTime();
-            endTimeInput.value = formatTimeDisplay(currentTime);
+            endTimeInput.value = formatTime(currentTime);
             endTimeInput.dataset.exactTime = currentTime.toString();
             delete endTimeInput.dataset.manualInput;
             updateButtonStates();
@@ -1292,6 +1284,27 @@
         // In case of dynamic UI, observe and re-apply
         const observerSpeedSlider = new MutationObserver(applySpeedSliderBg);
         observerSpeedSlider.observe(document.body, { childList: true, subtree: true });
+
+        // Add YouTube-style tooltip for the Dancer button
+        const dancerTooltip = document.createElement('div');
+        dancerTooltip.className = 'ytp-tooltip-dancer';
+        dancerTooltip.textContent = 'Dancer';
+        dancerTooltip.style.display = 'none';
+        document.body.appendChild(dancerTooltip);
+        btn.addEventListener('mouseenter', (e) => {
+            const rect = btn.getBoundingClientRect();
+            dancerTooltip.style.display = 'block';
+            dancerTooltip.style.left = (rect.left + rect.width / 2 - dancerTooltip.offsetWidth / 2) + 'px';
+            dancerTooltip.style.top = (rect.top - 38) + 'px';
+        });
+        btn.addEventListener('mouseleave', () => {
+            dancerTooltip.style.display = 'none';
+        });
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            dancerTooltip.style.left = (rect.left + rect.width / 2 - dancerTooltip.offsetWidth / 2) + 'px';
+            dancerTooltip.style.top = (rect.top - 38) + 'px';
+        });
 
 
     }

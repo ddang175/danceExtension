@@ -1,18 +1,13 @@
 {
-    "name": "UMOVE",
-    "description": "Help people learn choreographies",
+    "name": "Dancer - Tools To Learn Dances on YouTube",
+    "description": "Control panel with video mirroring, creating segments, looping, cue-countdown, and a metronome to make learning choreographies on YouTube easier!",
     "version": "1.0",
     "manifest_version": 3,
     "permissions": [
-        "activeTab",
-        "storage",
-        "webRequest"
+        "storage"
     ],
     "host_permissions": [
-        "*://*.youtube.com/*",
-        "*://*.googlevideo.com/*",
-        "*://*.googleads.com/*",
-        "*://*.doubleclick.net/*"
+        "*://*.youtube.com/*"
     ],
     "content_scripts": [
         {

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap');
 #yt-dance-card {
   min-width: 320px;
   max-width: 400px;
@@ -678,4 +679,22 @@ input:checked + .slider:before {
   font-size: 13px;
   color: #fff;
   font-weight: 500;
+} 
+
+.ytp-tooltip-dancer {
+  position: fixed;
+  background: rgba(28,28,28,0.9);
+  color: #fff;
+  font-family: Roboto, Arial, sans-serif;
+  font: 700;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  /* box-shadow: 0 2px 8px rgba(0,0,0,0.3); */
+  pointer-events: none;
+  z-index: 10001;
+  white-space: nowrap;
+  text-align: center;
+  transition: opacity 0.15s;
+  opacity: 1;
 } 
