@@ -1,31 +1,60 @@
-<html>
-  <head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="popup.css">
-  </head>
-  <body>
-    <div id="topSection">
-      
-      <div class="speed-controls">
-        <div class="speed-slider-container">
-          <div class="speed-value" id="speedValue">1.0x</div>
-          <input type="range" class="speed-slider" id="speedSlider" 
-                 min="0.1" max="1" step="0.05" value="1">
-          <div class="speed-labels">
-           
-          </div>
+</head>
+<body>
+    <div class="popup-container">
+        <div class="header">
+            <div class="logo">
+                <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1080 1080">
+                    <defs><style>.st0{fill:#ffffff;}</style></defs>
+                    <path class="st0" d="M33.24,265.13,33.24,802.57,33.24,802.57h162.29c9.8,0,19.63-.19,29.35-1.46,168.26-22.04,247.57-215.7,200.08-369.74-39.05-114.83-116.21-166.18-232.38-166.24H33.24v-122.66s20.16.58,47.65.58h99.31c109.56,0,209.18,31.58,286.82,109.21,77.62,77.63,110.43,178.47,110.43,288.04s-29.86,208.19-107.48,285.82c-77.63,77.63-180.2,111.42-289.76,111.42H33.24v-134.96Z"/>
+                    <path class="st0" d="M909.29,476.64l-47.38,122.88c-45.8-24.83-89.42-10.84-89.42-10.84-14.95,2.1-29.3,8.07-41.34,17.19-31.15,23.61-46.11,53.83-44.88,90.66.84,25.24,10.96,49.26,28.32,67.61,21.02,22.21,46.57,33.31,76.68,33.31s53.7-10.27,74.25-30.82l29.24-24.06c13.99-9.1,28.4-13.17,46.37-13.06,35,.22,56.52,20.08,70.13,59.94,11.02,32.26,21.52,80.44,21.52,80.44l13.98,67.65h-131.33s-4.04-26.38-6.14-29.42c-47.03,26.17-101.34,34.88-162.92,26.14-34.12-4.84-66.73-18.36-94.31-39.04-78.14-58.59-113.06-135.1-104.76-229.53,4.11-46.8,22.82-91.65,53.09-127.57,51.06-60.58,114.68-90.89,190.87-90.89,43.43,0,82.77,9.81,118.02,29.42"/>
+                    <circle class="st0" cx="674.55" cy="311.84" r="97.12"/>
+                </svg>
+                <h1 class="title">DANCER</h1>
+            </div>
         </div>
         
-        <div class="mirror-toggle">
-          <label class="toggle-switch">
-            <input type="checkbox" id="mirrorToggle">
-            <span class="slider"></span>
-          </label>
-          <span class="mirror-label">Mirror</span>
+        <div class="content">
+            <div class="info-card">
+                <h2 class="info-title">Look In The YouTube Play Bar!</h2>
+                <p class="info-text">
+                  The dancer button with all functionality is located in the YouTube video player controls.
+                    Look for the dancer icon in the video player's control bar.
+                </p>
+            </div>
+            
+            <div class="features">
+                <div class="feature-item">
+                    <span class="feature-icon">🔄</span>
+                    <span class="feature-text">Video mirroring</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">⏱️</span>
+                    <span class="feature-text">Countdown timer</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🎵</span>
+                    <span class="feature-text">Metronome</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔄</span>
+                    <span class="feature-text">Segment looping</span>
+                </div>
+            </div>
         </div>
-      </div>
+        
+        <div class="footer">
+            <a href="#" id="bugReportLink" class="bug-report-link">
+                Found a bug? Click here to report it
+            </a>
+        </div>
     </div>
-    <button id="getTime">Get Time</button>
-
+    
     <script src="popup.js"></script>
-  </body>
+</body>
 </html>
