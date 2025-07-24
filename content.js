@@ -681,7 +681,7 @@
                     tapButton.textContent = 'Retry';
                     tapButton.onclick = () => {
                         resetTapSession();
-                        showMetronomeResults();
+                        tapButton.onclick = null;
                     };
                 }
                 
