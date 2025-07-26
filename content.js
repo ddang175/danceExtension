@@ -702,6 +702,18 @@
         }
         positionCard();
         window.addEventListener('resize', positionCard);
+        
+        document.addEventListener('fullscreenchange', () => {
+            if (card.style.display === 'block') {
+                setTimeout(positionCard, 100);
+            }
+        });
+        
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (card.style.display === 'block') {
+                setTimeout(positionCard, 100);
+            }
+        });
 
         btn.addEventListener('click', () => {
             if (!isVideoPage()) {
